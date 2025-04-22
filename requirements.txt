@@ -1,0 +1,9 @@
+chromedriver-autoinstaller
+telethon
+requests
+selenium
+webdriver-manager
+pyperclip
+sentence-transformers==2.2.2
+torch
+transformers
