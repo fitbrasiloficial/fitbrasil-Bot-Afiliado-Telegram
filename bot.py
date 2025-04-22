@@ -163,7 +163,7 @@ def gerar_link_afiliado_shopee(link_original):
         affiliate_link = pyperclip.paste()
 
         return affiliate_link
-    except Exception as e:v
+    except Exception as e:
         print(f"❌ Erro ao gerar link afiliado Shopee: {e}")
         return link_original
     finally:
