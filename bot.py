@@ -1,4 +1,5 @@
 from telethon import TelegramClient, events
+from telethon.sessions import StringSession
 import re
 import os
 import psycopg2
@@ -20,11 +21,12 @@ import json
 # Configurações
 api_id = int(os.environ.get("API_ID"))
 api_hash = os.environ.get("API_HASH")
+string = os.environ.get("STRING")
 session_name = os.environ.get("SESSION_NAME")
 canal_origem = os.environ.get("CANAL_ORIGEM")
 canal_destino = os.environ.get("CANAL_DESTINO")
 
-client = TelegramClient(session_name, api_id, api_hash)
+client = TelegramClient(StringSession(string), api_id, api_hash)
 modelo = SentenceTransformer('paraphrase-MiniLM-L6-v2')  
 
 def obter_cookies_do_banco(nome_loja):
