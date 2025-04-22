@@ -39,6 +39,7 @@ def obter_cookies_do_banco(nome_loja):
         )
 
         cur = conn.cursor()
+        
         cur.execute("SELECT json_cookies FROM cookies WHERE nome_loja = %s", (nome_loja,))
         resultado = cur.fetchone()
 
@@ -46,7 +47,8 @@ def obter_cookies_do_banco(nome_loja):
         conn.close()
 
         if resultado:
-            cookies = json.loads(resultado[0])
+            cookies = resultado[0]
+
             if isinstance(cookies, list):
                 return cookies
             else:
@@ -55,6 +57,7 @@ def obter_cookies_do_banco(nome_loja):
         else:
             print(f"⚠️ Nenhum cookie encontrado para {nome_loja}")
             return []
+
     except Exception as e:
         print(f"❌ Erro ao obter cookies do banco: {e}")
         return []
