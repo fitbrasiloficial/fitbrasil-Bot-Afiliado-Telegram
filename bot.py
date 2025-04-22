@@ -30,24 +30,33 @@ client = TelegramClient(StringSession(string), api_id, api_hash)
 modelo = SentenceTransformer('paraphrase-MiniLM-L6-v2')  
 
 def obter_cookies_do_banco(nome_loja):
-    conn = psycopg2.connect(
-        host=os.environ['HOST'],
-        dbname=os.environ['DBNOME'],
-        user=os.environ['USUARIO_DB'],
-        password=os.environ['SENHA_DB']
-    )
+    try:
+        conn = psycopg2.connect(
+            host=os.environ['HOST'],
+            dbname=os.environ['DBNOME'],
+            user=os.environ['USUARIO_DB'],
+            password=os.environ['SENHA_DB']
+        )
 
-    cur = conn.cursor()
-    cur.execute("SELECT json_cookies FROM cookies WHERE nome_loja = %s", (nome_loja,))
-    resultado = cur.fetchone()
+        cur = conn.cursor()
+        cur.execute("SELECT json_cookies FROM cookies WHERE nome_loja = %s", (nome_loja,))
+        resultado = cur.fetchone()
 
-    cur.close()
-    conn.close()
+        cur.close()
+        conn.close()
 
-    if resultado:
-        return json.loads(resultado[0])
-    else:
-        print(f"⚠️ Nenhum cookie encontrado para {nome_loja}")
+        if resultado:
+            cookies = json.loads(resultado[0])
+            if isinstance(cookies, list):
+                return cookies
+            else:
+                print(f"⚠️ O formato de cookies não é uma lista para {nome_loja}. Retornando vazio.")
+                return []
+        else:
+            print(f"⚠️ Nenhum cookie encontrado para {nome_loja}")
+            return []
+    except Exception as e:
+        print(f"❌ Erro ao obter cookies do banco: {e}")
         return []
 
 def extrair_nome_com_ia(mensagem):
