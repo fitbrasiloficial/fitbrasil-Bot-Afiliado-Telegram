@@ -1,8 +1,8 @@
+# Copyright (c) 2025 Murilo De Souza
+# Licenciado sob os termos da licença MIT.
 from telethon import TelegramClient, events
-from telethon.sessions import StringSession
 import re
 import os
-import psycopg2
 import requests
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -17,50 +17,19 @@ import time
 import pyperclip
 from sentence_transformers import SentenceTransformer, util
 import json
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # Configurações
 api_id = int(os.environ.get("API_ID"))
 api_hash = os.environ.get("API_HASH")
-string = os.environ.get("STRING")
 session_name = os.environ.get("SESSION_NAME")
 canal_origem = os.environ.get("CANAL_ORIGEM")
 canal_destino = os.environ.get("CANAL_DESTINO")
 
-client = TelegramClient(StringSession(string), api_id, api_hash)
+client = TelegramClient("sessao_bot", api_id, api_hash)
 modelo = SentenceTransformer('paraphrase-MiniLM-L6-v2')  
-
-def obter_cookies_do_banco(nome_loja):
-    try:
-        conn = psycopg2.connect(
-            host=os.environ['HOST'],
-            dbname=os.environ['DBNOME'],
-            user=os.environ['USUARIO_DB'],
-            password=os.environ['SENHA_DB']
-        )
-
-        cur = conn.cursor()
-        
-        cur.execute("SELECT json_cookies FROM cookies WHERE nome_loja = %s", (nome_loja,))
-        resultado = cur.fetchone()
-
-        cur.close()
-        conn.close()
-
-        if resultado:
-            cookies = resultado[0]
-
-            if isinstance(cookies, list):
-                return cookies
-            else:
-                print(f"⚠️ O formato de cookies não é uma lista para {nome_loja}. Retornando vazio.")
-                return []
-        else:
-            print(f"⚠️ Nenhum cookie encontrado para {nome_loja}")
-            return []
-
-    except Exception as e:
-        print(f"❌ Erro ao obter cookies do banco: {e}")
-        return []
 
 def extrair_nome_com_ia(mensagem):
     linhas = mensagem.splitlines()
@@ -116,36 +85,21 @@ def identificar_loja(url):
     else:
         return "Não afiliado"
 
-def gerar_link_afiliado_shopee(link_original):
+def iniciar_driver_com_perfil():
     chromedriver_autoinstaller.install()
-
     chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
+    chrome_options.add_argument(r"--user-data-dir=C:\Users\muril\AppData\Local\Google\Chrome\User Data")
+    chrome_options.add_argument(r'--profile-directory=Default')
+    chrome_options.add_argument("--start-maximized")
+    #chrome_options.add_argument("--headless")
+    #chrome_options.add_argument("--disable-gpu")
+    #chrome_options.add_argument("--window-size=1920,1080")
+    return webdriver.Chrome(options=chrome_options)
 
-    driver = webdriver.Chrome(options=chrome_options)
+def gerar_link_afiliado_shopee(link_original):
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Shopee")
-
-        driver.get("https://affiliate.shopee.com.br")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-
-        driver.refresh()
-
         driver.get("https://affiliate.shopee.com.br/offer/custom_link")
 
         textarea = WebDriverWait(driver, 10).until(
@@ -184,35 +138,9 @@ def gerar_link_afiliado_shopee(link_original):
         driver.quit()
 
 def gerar_link_afiliado_magazine(nome_produto):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Magazine")
-
-        driver.get("https://www.magazinevoce.com.br")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-
-        driver.refresh()
-
         driver.get("https://www.magazinevoce.com.br/magazinedevofertas/")
 
         time.sleep(3)
@@ -258,35 +186,9 @@ def gerar_link_afiliado_magazine(nome_produto):
         driver.quit()
 
 def gerar_link_afiliado_kabum(link_original):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Kabum")
-
-        driver.get("https://ui.awin.com")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-
-        driver.refresh()
-
         driver.get("https://ui.awin.com/link-builder/br/awin/publisher/1914944")
 
         time.sleep(10)
@@ -335,35 +237,9 @@ def gerar_link_afiliado_kabum(link_original):
         driver.quit()
 
 def gerar_link_afiliado_encurtador(link_original):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Encurtador")
-
-        driver.get("https://app.short.io")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-
-        driver.refresh()
-
         driver.get("https://app.short.io/users/dashboard/1339011/links")
 
         time.sleep(1)
@@ -409,35 +285,9 @@ def gerar_link_afiliado_encurtador(link_original):
         driver.quit()
 
 def gerar_link_afiliado_amazon(link_original):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Amazon")
-
-        driver.get("https://www.amazon.com.br")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-                
-        driver.refresh()
-
         driver.get(link_original)
 
         get_link_button = WebDriverWait(driver, 10).until(
@@ -462,35 +312,9 @@ def gerar_link_afiliado_amazon(link_original):
         driver.quit()
 
 def gerar_link_afiliado_aliexpress(link_original):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("Aliexpress")
-
-        driver.get("https://pt.aliexpress.com")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-                
-        driver.refresh()
-
         driver.get(link_original)
 
         time.sleep(2)
@@ -517,35 +341,9 @@ def gerar_link_afiliado_aliexpress(link_original):
         driver.quit()
 
 def gerar_link_afiliado_mercadolivre(link_original):
-    chromedriver_autoinstaller.install()
-
-    chrome_options = Options()
-    chrome_options.add_argument("--remote-debugging-port=9222")
-    chrome_options.add_argument("--disable-extensions")
-    chrome_options.add_argument("--disable-popup-blocking")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--window-size=1920,1080")
-
-    driver = webdriver.Chrome(options=chrome_options)
+    driver = iniciar_driver_com_perfil()
 
     try:
-        cookies = obter_cookies_do_banco("MercadoLivre")
-
-        driver.get("https://www.mercadolivre.com.br")
-        for cookie in cookies:
-            cookie.pop('sameSite', None)
-            if 'expiry' in cookie and cookie['expiry'] is None:
-                del cookie['expiry']
-            try:
-                driver.add_cookie(cookie)
-            except Exception as err:
-                print(f"Erro ao adicionar cookie: {err}")
-                
-        driver.refresh()
-
         driver.get("https://www.mercadolivre.com.br/afiliados/linkbuilder")
 
         time.sleep(1)
