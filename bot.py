@@ -479,6 +479,6 @@ async def pegar_oferta(event):
     else:
         print("🔕 Ignorando mensagens de cupom")
 
-print("👨🏻‍💻 Ativando o spyware no @nerdofertas ...")
+print(f"👨🏻‍💻 Ativando o spyware no @{CANAL_ORIGEM} ...")
 client.start()
 client.run_until_disconnected()
