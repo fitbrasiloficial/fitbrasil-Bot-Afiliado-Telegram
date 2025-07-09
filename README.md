@@ -1,3 +1,7 @@
+## Licença
+
+Este projeto está licenciado sob a Licença MIT - veja o arquivo [LICENSE](./LICENSE) para detalhes.
+
 # Bot Afiliado Telegram
 
 Este projeto é um **bot de afiliados** desenvolvido para o **Telegram**. Ele foi criado para automatizar a geração de links de afiliado de diversas plataformas de e-commerce, como **Mercado Livre**, **Shopee**, **Amazon**, **Kabum**, **Magazine Luiza** e **AliExpress**, e repostá-los em canais do Telegram. O bot utiliza ferramentas como **Selenium** para automação de navegação nas plataformas e **Telethon** para interação com o Telegram.
